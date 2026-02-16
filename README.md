@@ -42,7 +42,10 @@ src/
 - The simulation starts automatically.
 - At full time, click **Restart Match** to run another match.
 
-- cd /workspace/mine
-git remote add origin https://github.com/<YOUR_USERNAME>/<YOUR_REPO>.git
-git push -u origin work
+cd /workspace/mine
+git remote add origin https://github.com/fredistata470-ctrl/mine.git
+git branch -M main
+git push -u origin main
 
+git remote -v
+git status
