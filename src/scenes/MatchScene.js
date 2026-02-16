@@ -167,6 +167,10 @@ export default class MatchScene extends Phaser.Scene {
     }
 
     const now = this.time.now;
+    if (now < this.ball.possessionLockedUntil) {
+      return;
+    }
+
     if (now - this.lastPossessionSwapAt < POSSESSION_COOLDOWN_MS) {
       return;
     }

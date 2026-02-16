@@ -4,7 +4,8 @@ import {
   BALL_RADIUS,
   BALL_STOP_THRESHOLD,
   FIELD_HEIGHT,
-  FIELD_WIDTH
+  FIELD_WIDTH,
+  POSSESSION_COOLDOWN_MS
 } from '../config/constants.js';
 import { clamp, normalizeVector } from '../utils/physics.js';
 
@@ -17,6 +18,8 @@ export default class Ball {
     this.velocityY = 0;
     this.owner = null;
     this.radius = BALL_RADIUS;
+    this.lastKickerId = null;
+    this.possessionLockedUntil = 0;
 
     this.sprite = scene.add.circle(this.x, this.y, this.radius, 0xffffff, 1);
     this.sprite.setDepth(3);
@@ -60,6 +63,8 @@ export default class Ball {
     this.owner = player;
     if (player) {
       player.hasBall = true;
+      this.lastKickerId = null;
+      this.possessionLockedUntil = 0;
       this.velocityX = 0;
       this.velocityY = 0;
       this.x = player.x;
@@ -77,8 +82,11 @@ export default class Ball {
   }
 
   shoot(targetX, targetY, power) {
+    const kicker = this.owner;
     const direction = normalizeVector(this.x, this.y, targetX, targetY);
     this.release();
+    this.lastKickerId = kicker ? kicker.id : null;
+    this.possessionLockedUntil = this.scene.time.now + POSSESSION_COOLDOWN_MS;
     const normalizedPower = Math.max(30, power);
     this.velocityX = direction.x * normalizedPower * BALL_POWER_SCALE;
     this.velocityY = direction.y * normalizedPower * BALL_POWER_SCALE;
@@ -94,6 +102,8 @@ export default class Ball {
 
   resetToCenter() {
     this.release();
+    this.lastKickerId = null;
+    this.possessionLockedUntil = 0;
     this.x = FIELD_WIDTH / 2;
     this.y = FIELD_HEIGHT / 2;
     this.velocityX = 0;
