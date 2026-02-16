@@ -1,4 +1,4 @@
-# 2D Football Match Engine Prototype
+# 2D Football Match Engine Prototype.
 
 A Phaser 3 browser prototype that simulates a full AI-vs-AI 7v7 football match over 3 minutes with:
 
