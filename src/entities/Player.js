@@ -1,5 +1,7 @@
 import {
   AI_DECISION_INTERVAL_MS,
+  BALL_OWNER_RING_ALPHA,
+  BALL_OWNER_RING_WIDTH,
   FIELD_HEIGHT,
   FIELD_WIDTH,
   GOALKEEPER_RADIUS,
@@ -45,6 +47,7 @@ export default class Player {
     this.radius = this.isGoalkeeper ? GOALKEEPER_RADIUS : PLAYER_RADIUS;
 
     this.decisionCooldownMs = randomInt(40, 180);
+    this.ballCarryMs = 0;
 
     this.sprite = scene.add.circle(this.x, this.y, this.radius, TEAM_COLORS[this.team], 1);
     this.outline = scene.add.circle(this.x, this.y, this.radius + 4);
@@ -61,9 +64,11 @@ export default class Player {
 
     if (this.hasBall) {
       this.state = PLAYER_STATES.HAS_BALL;
+      this.ballCarryMs += deltaMs;
       this.handleBallState(scene, deltaSec, ball, teammates, opponents, effectiveStats);
       this.stamina = clamp(this.stamina - (STAMINA_DRAIN_PER_SECOND * deltaSec), 0, MAX_STAMINA);
     } else {
+      this.ballCarryMs = 0;
       this.state = this.pickOffBallState(ball, teammates, scene.playersByTeam[this.team]);
 
       if (this.state === PLAYER_STATES.CHASE_BALL) {
@@ -93,7 +98,8 @@ export default class Player {
       return;
     }
 
-    const shouldPass = nearbyDefenders.length > 0 && Math.random() < PASS_PROBABILITY_WHEN_PRESSURED;
+    const carryTooLong = this.ballCarryMs > 1500;
+    const shouldPass = carryTooLong || (nearbyDefenders.length > 0 && Math.random() < PASS_PROBABILITY_WHEN_PRESSURED);
     if (shouldPass && this.decisionReady()) {
       const teammate = this.findBestPassTarget(teammates);
       if (teammate) {
@@ -220,6 +226,6 @@ export default class Player {
   render() {
     this.sprite.setPosition(this.x, this.y);
     this.outline.setPosition(this.x, this.y);
-    this.outline.setStrokeStyle(this.hasBall ? 2 : 0, TEAM_COLORS.ballOwnerRing, 1);
+    this.outline.setStrokeStyle(this.hasBall ? BALL_OWNER_RING_WIDTH : 0, TEAM_COLORS.ballOwnerRing, BALL_OWNER_RING_ALPHA);
   }
 }
