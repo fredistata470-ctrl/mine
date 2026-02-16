@@ -31,10 +31,14 @@ export const AI_DECISION_INTERVAL_MS = 220;
 export const TEAM_COLORS = {
   home: 0x1976d2,
   away: 0xd32f2f,
-  ballOwnerRing: 0xffeb3b,
+  ballOwnerRing: 0xffffff,
   pitch: 0x2e7d32,
   line: 0xffffff
 };
+
+export const BALL_OWNER_RING_ALPHA = 0.45;
+export const BALL_OWNER_RING_WIDTH = 1;
+export const PLAYER_MIN_SPACING = PLAYER_RADIUS * 2 + 4;
 
 export const STAT_RANGES = {
   fieldPlayer: {

@@ -6,6 +6,7 @@ import {
   GOAL_DEPTH,
   GOAL_WIDTH,
   MATCH_DURATION,
+  PLAYER_MIN_SPACING,
   PLAYER_REACH,
   POSSESSION_COOLDOWN_MS,
   STAT_RANGES,
@@ -33,6 +34,7 @@ export default class MatchScene extends Phaser.Scene {
 
     this.ball = new Ball(this);
     this.ball.resetToCenter();
+    this.setupKickoff('home');
 
     this.createHud();
     this.updateScoreboard();
@@ -65,6 +67,7 @@ export default class MatchScene extends Phaser.Scene {
       player.update(this, delta, this.ball, teammates, opponents, this.teamPower[player.team]);
     });
 
+    this.applyPlayerSpacing();
     this.ball.update(deltaSec);
 
     this.handleBallPossession();
@@ -209,7 +212,8 @@ export default class MatchScene extends Phaser.Scene {
     });
 
     this.ball.resetToCenter();
-    this.matchPausedUntil = this.time.now + 2000;
+    this.setupKickoff(scoringTeam === 'home' ? 'away' : 'home');
+    this.matchPausedUntil = this.time.now + 1200;
   }
 
   updateMatchTimer(deltaSec) {
@@ -286,6 +290,51 @@ export default class MatchScene extends Phaser.Scene {
     restartButton.on('pointerdown', () => this.scene.restart());
 
     this.overlayElements = [bg, text, restartButton, restartLabel];
+  }
+
+
+  setupKickoff(team) {
+    const lineup = this.playersByTeam[team].filter((player) => !player.isGoalkeeper);
+    if (!lineup.length) {
+      return;
+    }
+
+    const kicker = lineup.reduce((closest, player) => {
+      const distance = Math.abs(player.formationX - (FIELD_WIDTH / 2));
+      return distance < Math.abs(closest.formationX - (FIELD_WIDTH / 2)) ? player : closest;
+    });
+
+    this.ball.setOwner(kicker);
+    kicker.ballCarryMs = 0;
+  }
+
+  applyPlayerSpacing() {
+    for (let i = 0; i < this.players.length; i += 1) {
+      for (let j = i + 1; j < this.players.length; j += 1) {
+        const playerA = this.players[i];
+        const playerB = this.players[j];
+
+        const dx = playerB.x - playerA.x;
+        const dy = playerB.y - playerA.y;
+        const distance = Math.hypot(dx, dy);
+
+        if (distance <= 0 || distance >= PLAYER_MIN_SPACING) {
+          continue;
+        }
+
+        const overlap = (PLAYER_MIN_SPACING - distance) / 2;
+        const nx = dx / distance;
+        const ny = dy / distance;
+
+        playerA.x -= nx * overlap;
+        playerA.y -= ny * overlap;
+        playerB.x += nx * overlap;
+        playerB.y += ny * overlap;
+
+        playerA.render();
+        playerB.render();
+      }
+    }
   }
 
   calculatePossessionPercent(team) {
