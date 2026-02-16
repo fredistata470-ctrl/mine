@@ -22,6 +22,8 @@ npm start
 
 Then open: `http://localhost:8000`
 
+> Note: the current server is static and does not hot-reload. If you edit code while the server is running, refresh the browser tab to see updates.
+
 ## Project Structure
 
 ```text
@@ -41,3 +43,10 @@ src/
 
 - The simulation starts automatically.
 - At full time, click **Restart Match** to run another match.
+
+## Quick check locally
+
+1. Run `npm install`.
+2. Run `npm start`.
+3. Open `http://localhost:8000`.
+4. Edit code and refresh the browser tab to see changes.
