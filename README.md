@@ -43,3 +43,7 @@ src/
 - At full time, click **Restart Match** to run another match.
 
 
+cd /workspace/mine
+git push -u origin work
+git branch -vv
+git status -sb
