@@ -34,6 +34,12 @@ export default class MatchScene extends Phaser.Scene {
     this.ball = new Ball(this);
     this.ball.resetToCenter();
 
+    this.createControls();
+    this.selectedPlayer = this.playersByTeam.home.find((player) => !player.isGoalkeeper) || null;
+    if (this.selectedPlayer) {
+      this.selectedPlayer.setControlled(true);
+    }
+
     this.createHud();
     this.updateScoreboard();
     this.updateTimerText();
@@ -59,7 +65,34 @@ export default class MatchScene extends Phaser.Scene {
 
     this.updateTeamPower();
 
+    this.handlePlayerSwitch();
+
+    if (this.selectedPlayer) {
+      const controls = {
+        left: this.cursors.left.isDown || this.wasd.left.isDown,
+        right: this.cursors.right.isDown || this.wasd.right.isDown,
+        up: this.cursors.up.isDown || this.wasd.up.isDown,
+        down: this.cursors.down.isDown || this.wasd.down.isDown,
+        shootPressed: Phaser.Input.Keyboard.JustDown(this.shootKey),
+        passPressed: Phaser.Input.Keyboard.JustDown(this.passKey)
+      };
+
+      this.selectedPlayer.manualUpdate(
+        this,
+        delta,
+        this.ball,
+        this.playersByTeam.home,
+        this.playersByTeam.away,
+        this.teamPower.home,
+        controls
+      );
+    }
+
     this.players.forEach((player) => {
+      if (player === this.selectedPlayer) {
+        return;
+      }
+
       const teammates = this.playersByTeam[player.team];
       const opponents = this.playersByTeam[player.team === 'home' ? 'away' : 'home'];
       player.update(this, delta, this.ball, teammates, opponents, this.teamPower[player.team]);
@@ -150,10 +183,48 @@ export default class MatchScene extends Phaser.Scene {
       color: '#ffffff'
     }).setOrigin(1, 0);
 
-    this.statusText = this.add.text(16, 18, 'AI vs AI', {
+    this.statusText = this.add.text(16, 18, 'WASD/Arrows Move | Space Shoot | Shift Pass | Tab Switch', {
       fontSize: '20px',
       color: '#e2e8f0'
     });
+  }
+
+  createControls() {
+    this.cursors = this.input.keyboard.createCursorKeys();
+    this.wasd = this.input.keyboard.addKeys({
+      up: Phaser.Input.Keyboard.KeyCodes.W,
+      down: Phaser.Input.Keyboard.KeyCodes.S,
+      left: Phaser.Input.Keyboard.KeyCodes.A,
+      right: Phaser.Input.Keyboard.KeyCodes.D
+    });
+    this.shootKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.passKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
+    this.switchKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.TAB);
+
+    this.input.keyboard.on('keydown-TAB', (event) => {
+      event.preventDefault();
+    });
+  }
+
+  handlePlayerSwitch() {
+    if (!Phaser.Input.Keyboard.JustDown(this.switchKey)) {
+      return;
+    }
+
+    const candidates = this.playersByTeam.home.filter((player) => !player.isGoalkeeper);
+    if (!candidates.length) {
+      return;
+    }
+
+    const currentIndex = candidates.findIndex((player) => player === this.selectedPlayer);
+    const nextPlayer = candidates[(currentIndex + 1) % candidates.length];
+
+    if (this.selectedPlayer) {
+      this.selectedPlayer.setControlled(false);
+    }
+
+    this.selectedPlayer = nextPlayer;
+    this.selectedPlayer.setControlled(true);
   }
 
   updateTeamPower() {
@@ -205,6 +276,7 @@ export default class MatchScene extends Phaser.Scene {
       player.x = player.formationX;
       player.y = player.formationY;
       player.hasBall = false;
+      player.setControlled(player === this.selectedPlayer);
       player.render();
     });
 
