@@ -51,6 +51,11 @@ export default class Player {
     this.outline.setStrokeStyle(0);
     this.outline.setDepth(2);
     this.sprite.setDepth(2);
+
+    this.isControlled = false;
+    this.controlIndicator = scene.add.triangle(this.x, this.y - (this.radius + 12), 0, 10, 10, 10, 5, 0, 0xffffff, 1);
+    this.controlIndicator.setDepth(4);
+    this.controlIndicator.setVisible(false);
   }
 
   update(scene, deltaMs, ball, teammates, opponents, teamPower) {
@@ -140,6 +145,53 @@ export default class Player {
     this.y = clamp(this.y, this.radius, FIELD_HEIGHT - this.radius);
   }
 
+  moveByInput(directionX, directionY, deltaSec, speed) {
+    const length = Math.hypot(directionX, directionY);
+    if (length === 0) {
+      return;
+    }
+
+    const normalizedX = directionX / length;
+    const normalizedY = directionY / length;
+    const currentSpeed = speed * (0.55 + (this.stamina / MAX_STAMINA) * 0.45);
+
+    this.x += normalizedX * currentSpeed * deltaSec;
+    this.y += normalizedY * currentSpeed * deltaSec;
+
+    this.x = clamp(this.x, this.radius, FIELD_WIDTH - this.radius);
+    this.y = clamp(this.y, this.radius, FIELD_HEIGHT - this.radius);
+  }
+
+  manualUpdate(scene, deltaMs, ball, teammates, opponents, teamPower, controls) {
+    const deltaSec = deltaMs / 1000;
+    const effectiveStats = applyTeamPowerModifier(this, teamPower);
+
+    const directionX = (controls.left ? -1 : 0) + (controls.right ? 1 : 0);
+    const directionY = (controls.up ? -1 : 0) + (controls.down ? 1 : 0);
+    this.moveByInput(directionX, directionY, deltaSec, effectiveStats.effectiveSpeed);
+
+    if (this.hasBall && controls.shootPressed) {
+      const goalX = this.team === 'home' ? FIELD_WIDTH : 0;
+      const goalY = (FIELD_HEIGHT / 2) + (directionY * 120);
+      const shotPower = effectiveStats.effectiveAttack + 65;
+      scene.matchState[`${this.team}Shots`] += 1;
+      ball.shoot(goalX, goalY, shotPower);
+    } else if (this.hasBall && controls.passPressed) {
+      const teammate = this.findBestPassTarget(teammates);
+      if (teammate) {
+        this.pass(scene, ball, teammate, effectiveStats.effectiveAttack + 10);
+      }
+    }
+
+    this.stamina = clamp(this.stamina - (STAMINA_DRAIN_PER_SECOND * deltaSec), 0, MAX_STAMINA);
+    this.render();
+  }
+
+  setControlled(isControlled) {
+    this.isControlled = isControlled;
+    this.controlIndicator.setVisible(isControlled);
+  }
+
   shoot(scene, ball, attackStat) {
     const goalX = this.team === 'home' ? FIELD_WIDTH : 0;
     const goalY = FIELD_HEIGHT / 2;
@@ -221,5 +273,6 @@ export default class Player {
     this.sprite.setPosition(this.x, this.y);
     this.outline.setPosition(this.x, this.y);
     this.outline.setStrokeStyle(this.hasBall ? 2 : 0, TEAM_COLORS.ballOwnerRing, 1);
+    this.controlIndicator.setPosition(this.x, this.y - (this.radius + 12));
   }
 }
