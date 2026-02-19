@@ -1,55 +1,58 @@
 export default class PreloadScene extends Phaser.Scene {
-  constructor() {
-    super('PreloadScene');
-  }
+  constructor() { super('PreloadScene'); }
 
   preload() {
-    // Load field and ball
+    // Prefer spritesheets (harmless if missing)
+    this.load.spritesheet('player_blue', 'assets/players/player_blue_spritesheet.png', { frameWidth: 48, frameHeight: 64 });
+    this.load.spritesheet('player_red', 'assets/players/player_red_spritesheet.png', { frameWidth: 48, frameHeight: 64 });
+
+    // Load the field (note: repo currently has soccer_field.png.png)
     this.load.image('field', 'assets/soccer_field.png.png');
+
+    // Ball (repo has assets/ball.png)
     this.load.image('ball', 'assets/ball.png');
 
-    // Goalkeepers
-    this.load.image('goalie_Northfield', 'assets/goalie_Northfield.png');
+    // Goalie(s) - load the actual filename present in repo
     this.load.image('goalie_Westfield', 'assets/goalie_Westfield.png');
+    this.load.image('goalie_Northfield', 'assets/goalie_Northfield.png');
 
-    // Player sets (home: player1..player7, away: playera..playerg)
+    // Load individual player images that exist in repo (safe if missing)
     for (let i = 1; i <= 7; i++) {
       this.load.image(`player${i}`, `assets/player${i}.png`);
     }
-    const letters = ['a','b','c','d','e','f','g'];
-    letters.forEach((ch, idx) => {
-      this.load.image(`player${ch}`, `assets/player${ch}.png`);
-    });
+    ['a','b','c','d','e','f','g'].forEach(ch => this.load.image(`player${ch}`, `assets/player${ch}.png`));
 
-    // Additional variants
-    ['playera','playerb','playerc','playerd','playere','playerf','playerg'].forEach(k => {
-      this.load.image(k, `assets/${k}.png`);
-    });
-
-    // Audio (optional)
+    // Load placeholder audio (we will add a small silent mp3 file)
     this.load.audio('menu_music', 'assets/audio/menu_music.mp3');
 
     // Loading UI
     const loading = this.add.text(this.cameras.main.centerX, this.cameras.main.centerY, 'Loading...', {
-      fontSize: '18px',
-      color: '#ffffff'
+      fontSize: '18px', color: '#ffffff'
     }).setOrigin(0.5);
+
+    // Log concise warnings for missing files (prevents spam)
+    const missing = new Set();
+    this.load.on('fileerror', (file) => {
+      if (!missing.has(file.src)) {
+        missing.add(file.src);
+        // Use warn so it's visible but not noisy
+        console.warn('[Preload] failed to load:', file.key, file.src);
+      }
+    });
 
     this.load.on('complete', () => loading.destroy());
   }
 
   create() {
-    // Create fallback textures for any missing keys so Phaser never shows missing-texture boxes
+    // Generate minimal placeholders for any missing textures so the game never shows default green boxes
     const placeholders = [
       { key: 'field', w: 1000, h: 600, color: 0x2e7d32 },
       { key: 'ball', w: 16, h: 16, color: 0xffffff },
-      { key: 'goalie_Northfield', w: 48, h: 64, color: 0xffcc00 },
-      { key: 'goalie_Westfield', w: 48, h: 64, color: 0xffcc00 }
+      { key: 'player_blue', w: 48, h: 64, color: 0x1976d2 },
+      { key: 'player_red', w: 48, h: 64, color: 0xd32f2f },
+      { key: 'goalie_Westfield', w: 48, h: 64, color: 0xffcc00 },
+      { key: 'goalie_Northfield', w: 48, h: 64, color: 0xffcc00 }
     ];
-
-    // player keys
-    for (let i = 1; i <= 7; i++) placeholders.push({ key: `player${i}`, w: 48, h: 64, color: 0x1976d2 });
-    ['a','b','c','d','e','f','g'].forEach((ch) => placeholders.push({ key: `player${ch}`, w: 48, h: 64, color: 0xd32f2f }));
 
     placeholders.forEach((p) => {
       if (!this.textures.exists(p.key)) {
@@ -63,7 +66,6 @@ export default class PreloadScene extends Phaser.Scene {
       }
     });
 
-    // Start main match scene
     this.scene.start('MatchScene');
   }
 }
