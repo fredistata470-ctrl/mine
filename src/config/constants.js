@@ -21,6 +21,7 @@ export const PASS_PROBABILITY_WHEN_PRESSURED = 0.55;
 export const BALL_FRICTION = 0.98;
 export const BALL_STOP_THRESHOLD = 8;
 export const BALL_POWER_SCALE = 2.4;
+export const BALL_HOMING_STRENGTH = 0.18;
 
 export const MAX_STAMINA = 100;
 export const STAMINA_DRAIN_PER_SECOND = 2.3;
