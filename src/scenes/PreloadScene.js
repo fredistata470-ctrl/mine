@@ -4,20 +4,29 @@ export default class PreloadScene extends Phaser.Scene {
   }
 
   preload() {
-    // Attempt to load real assets if present in the repo/workspace
-    const images = [
-      { key: 'field', url: 'assets/field.png' },
-      { key: 'ball', url: 'assets/ball.png' },
-      { key: 'goalie_Westward', url: 'assets/players/goalie_Westward.png' },
-      { key: 'player_home', url: 'assets/players/player_home.png' },
-      { key: 'player_away', url: 'assets/players/player_away.png' }
-    ];
+    // Load field and ball
+    this.load.image('field', 'assets/soccer_field.png.png');
+    this.load.image('ball', 'assets/ball.png');
 
-    images.forEach((img) => {
-      this.load.image(img.key, img.url);
+    // Goalkeepers
+    this.load.image('goalie_Northfield', 'assets/goalie_Northfield.png');
+    this.load.image('goalie_Westfield', 'assets/goalie_Westfield.png');
+
+    // Player sets (home: player1..player7, away: playera..playerg)
+    for (let i = 1; i <= 7; i++) {
+      this.load.image(`player${i}`, `assets/player${i}.png`);
+    }
+    const letters = ['a','b','c','d','e','f','g'];
+    letters.forEach((ch, idx) => {
+      this.load.image(`player${ch}`, `assets/player${ch}.png`);
     });
 
-    // Try to load audio (if present)
+    // Additional variants
+    ['playera','playerb','playerc','playerd','playere','playerf','playerg'].forEach(k => {
+      this.load.image(k, `assets/${k}.png`);
+    });
+
+    // Audio (optional)
     this.load.audio('menu_music', 'assets/audio/menu_music.mp3');
 
     // Loading UI
@@ -26,20 +35,21 @@ export default class PreloadScene extends Phaser.Scene {
       color: '#ffffff'
     }).setOrigin(0.5);
 
-    this.load.on('complete', () => {
-      loading.destroy();
-    });
+    this.load.on('complete', () => loading.destroy());
   }
 
   create() {
-    // For any missing textures, create simple placeholder textures so the game never shows missing-texture boxes.
+    // Create fallback textures for any missing keys so Phaser never shows missing-texture boxes
     const placeholders = [
       { key: 'field', w: 1000, h: 600, color: 0x2e7d32 },
       { key: 'ball', w: 16, h: 16, color: 0xffffff },
-      { key: 'goalie_Westward', w: 48, h: 64, color: 0xffcc00 },
-      { key: 'player_home', w: 48, h: 64, color: 0x1976d2 },
-      { key: 'player_away', w: 48, h: 64, color: 0xd32f2f }
+      { key: 'goalie_Northfield', w: 48, h: 64, color: 0xffcc00 },
+      { key: 'goalie_Westfield', w: 48, h: 64, color: 0xffcc00 }
     ];
+
+    // player keys
+    for (let i = 1; i <= 7; i++) placeholders.push({ key: `player${i}`, w: 48, h: 64, color: 0x1976d2 });
+    ['a','b','c','d','e','f','g'].forEach((ch) => placeholders.push({ key: `player${ch}`, w: 48, h: 64, color: 0xd32f2f }));
 
     placeholders.forEach((p) => {
       if (!this.textures.exists(p.key)) {
@@ -53,9 +63,7 @@ export default class PreloadScene extends Phaser.Scene {
       }
     });
 
-    // If audio didn't load, we don't need to create a placeholder — audio can be optional.
-
-    // Begin main scene
+    // Start main match scene
     this.scene.start('MatchScene');
   }
 }
