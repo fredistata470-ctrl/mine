@@ -1,5 +1,5 @@
-export const FIELD_WIDTH = 1000;
-export const FIELD_HEIGHT = 600;
+export const FIELD_WIDTH = 1200;
+export const FIELD_HEIGHT = 720;
 export const MATCH_DURATION = 180;
 
 export const GOAL_WIDTH = 80;
@@ -7,9 +7,9 @@ export const GOAL_DEPTH = 20;
 export const GOAL_HOME_X = 0;
 export const GOAL_AWAY_X = FIELD_WIDTH;
 
-export const PLAYER_RADIUS = 10;
-export const GOALKEEPER_RADIUS = 12;
-export const BALL_RADIUS = 5;
+export const PLAYER_RADIUS = 24;
+export const GOALKEEPER_RADIUS = 28;
+export const BALL_RADIUS = 8;
 
 export const PLAYER_REACH = PLAYER_RADIUS + BALL_RADIUS + 2;
 export const POSSESSION_COOLDOWN_MS = 400;
