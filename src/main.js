@@ -1,17 +1,32 @@
-import MatchScene from './scenes/MatchScene.js';
-import { FIELD_HEIGHT, FIELD_WIDTH } from './config/constants.js';
+// PreloadScene implementation
 
+class PreloadScene extends Phaser.Scene {
+    constructor() {
+        super({ key: 'PreloadScene' });
+    }
+
+    preload() {
+        // Load assets here
+    }
+
+    create() {
+        // Transition to next scene
+        this.scene.start('NextScene');
+    }
+}
+
+// Disable arcade debug
 const config = {
-  type: Phaser.AUTO,
-  parent: 'game-container',
-  width: FIELD_WIDTH,
-  height: FIELD_HEIGHT,
-  backgroundColor: '#000000',
-  scene: [MatchScene],
-  fps: {
-    target: 60,
-    forceSetTimeOut: false
-  }
+    type: Phaser.AUTO,
+    width: 800,
+    height: 600,
+    physics: {
+        default: 'arcade',
+        arcade: {
+            debug: false
+        }
+    },
+    scene: [PreloadScene, /* other scenes */]
 };
 
-new Phaser.Game(config);
+const game = new Phaser.Game(config);
